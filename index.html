@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de Indicadores</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f5f4f0;
+    --surface: #fcfcfb;
+    --surface-2: #f0efec;
+    --border: #e2e0da;
+    --text: #0b0b0b;
+    --text-2: #52514e;
+    --text-3: #7a7873;
+    --accent: #1f3a5f;
+    --series-1: #2a78d6;
+    --series-1-soft: #9ec5f4;
+    --ref: #0b0b0b;
+    --good-text: #006300;
+    --good-bg: #e6f4e6;
+    --bad: #d03b3b;
+    --bad-text: #a52626;
+    --bad-bg: #fbe9e9;
+    --warn-bg: #fff4d6;
+    --warn-border: #fab219;
+    --info-bg: #e8f1fc;
+    --shadow: 0 1px 2px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #121211; --surface: #1a1a19; --surface-2: #262624; --border: #33332f;
+      --text: #ffffff; --text-2: #c3c2b7; --text-3: #8f8e86; --accent: #9ec5f4;
+      --series-1: #3987e5; --series-1-soft: #184f95; --ref: #ffffff;
+      --good-text: #6fd46f; --good-bg: #17301a; --bad-text: #f08a8a; --bad-bg: #3a1c1c;
+      --warn-bg: #3a2f10; --info-bg: #16263a; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #121211; --surface: #1a1a19; --surface-2: #262624; --border: #33332f;
+    --text: #ffffff; --text-2: #c3c2b7; --text-3: #8f8e86; --accent: #9ec5f4;
+    --series-1: #3987e5; --series-1-soft: #184f95; --ref: #ffffff;
+    --good-text: #6fd46f; --good-bg: #17301a; --bad-text: #f08a8a; --bad-bg: #3a1c1c;
+    --warn-bg: #3a2f10; --info-bg: #16263a; --shadow: none;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  header { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
+  .eyebrow { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin: 0 0 2px; }
+  h1 { font-size: 24px; line-height: 1.2; margin: 0; overflow-wrap: anywhere; }
+  .sub { color: var(--text-2); font-size: 13px; margin-top: 4px; }
+  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  select, button {
+    font: inherit; font-size: 14px; color: var(--text); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; min-height: 40px;
+  }
+  button { cursor: pointer; }
+  button:hover, select:hover { border-color: var(--text-3); }
+  .btn-link { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border-radius: 8px; background: var(--accent); color: var(--surface); text-decoration: none; font-weight: 600; font-size: 14px; }
+  .back { background: none; border: none; padding: 0; min-height: 0; color: var(--text-2); margin-bottom: 8px; }
+
+  .banner { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; }
+  .banner p { margin: 0; }
+  .atalho { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; background: var(--info-bg); border-radius: 10px; padding: 10px 14px; margin-bottom: 4px; font-size: 14px; }
+  .atalho a { color: inherit; font-weight: 600; }
+
+  h2 { font-size: 16px; margin: 28px 0 10px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+    box-shadow: var(--shadow); text-align: left; min-height: 0; display: flex; flex-direction: column; gap: 6px;
+  }
+  .card.sel { outline: 2px solid var(--series-1); outline-offset: -1px; }
+  .card .lbl { font-size: 13px; color: var(--text-2); line-height: 1.3; }
+  .card .val { font-size: 26px; font-weight: 650; letter-spacing: -.01em; line-height: 1.1; }
+  .card .det { font-size: 12px; color: var(--text-3); }
+  .card .delta { font-size: 12px; color: var(--text-2); }
+  .pill { align-self: flex-start; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 9px; }
+  .pill.ok { background: var(--good-bg); color: var(--good-text); }
+  .pill.no { background: var(--bad-bg); color: var(--bad-text); }
+  .pill.na { background: var(--surface-2); color: var(--text-3); font-weight: 500; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; box-shadow: var(--shadow); }
+  .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 8px; scrollbar-width: thin; }
+  .chip { white-space: nowrap; border-radius: 999px; padding: 6px 12px; min-height: 34px; font-size: 13px; }
+  .chip[aria-pressed="true"] { background: var(--text); color: var(--surface); border-color: var(--text); }
+  .chart-title { font-size: 14px; font-weight: 600; margin: 4px 0 0; }
+  .chart-note { font-size: 12px; color: var(--text-3); margin: 2px 0 6px; }
+  .chart { position: relative; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart text { font-size: 11px; fill: var(--text-3); font-variant-numeric: tabular-nums; }
+  .chart .grid-line { stroke: var(--border); stroke-width: 1; }
+  .chart .zero { stroke: var(--text-3); stroke-width: 1; }
+  .chart .bar { fill: var(--series-1); }
+  .chart .bar.dim { fill: var(--series-1-soft); }
+  .chart .ref-line { stroke: var(--ref); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .chart .ref-lbl { fill: var(--text); font-weight: 600; }
+  .chart .hit { fill: transparent; cursor: pointer; }
+  .tip { position: absolute; pointer-events: none; background: var(--text); color: var(--surface); font-size: 12px; padding: 6px 9px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, -100%); margin-top: -8px; display: none; }
+
+  .tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 9px 12px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  th { font-weight: 600; color: var(--text-2); background: var(--surface-2); position: sticky; top: 0; }
+  th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: inherit; }
+  tbody tr { background: var(--surface); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.ok { color: var(--good-text); font-weight: 600; }
+  td.no { color: var(--bad-text); font-weight: 600; }
+  tr.click { cursor: pointer; }
+  tr.click:hover td { background: var(--surface-2); }
+  .kv td:first-child { color: var(--text-2); }
+  .tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+  .tag.ok { background: var(--good-bg); color: var(--good-text); }
+  .tag.no { background: var(--bad-bg); color: var(--bad-text); }
+  .tag.na { background: var(--surface-2); color: var(--text-3); }
+
+  /* Plano de ação */
+  .plano-intro { color: var(--text-2); margin: -4px 0 12px; font-size: 14px; }
+  .leitura { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--series-1); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+  .leitura p { margin: 0 0 6px; }
+  .leitura p:last-child { margin-bottom: 0; }
+  .leitura .t { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+  .semana { background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+  .semana h3 { margin: 0 0 6px; font-size: 15px; }
+  .semana ol { margin: 0; padding-left: 20px; }
+  .semana li { margin: 4px 0; }
+  .acao { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; box-shadow: var(--shadow); }
+  .acao-top { display: flex; gap: 10px; align-items: flex-start; }
+  .prio { flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--surface); font-weight: 700; font-size: 14px; display: grid; place-items: center; }
+  .acao h3 { margin: 2px 0 2px; font-size: 16px; }
+  .acao .porque { margin: 0; color: var(--text-2); font-size: 14px; }
+  .acao .meta { display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 600; background: var(--surface-2); border-radius: 6px; padding: 3px 8px; }
+  .acao ol { margin: 10px 0 8px; padding-left: 20px; }
+  .acao li { margin: 5px 0; }
+  .acao li:first-child { font-weight: 600; }
+  .acao .ref { font-size: 12px; color: var(--text-3); margin: 0; }
+  .manter { background: var(--good-bg); border-radius: 10px; padding: 12px 14px; margin-top: 12px; }
+  .manter h3 { margin: 0 0 4px; font-size: 15px; color: var(--good-text); }
+  .manter ul { margin: 0; padding-left: 20px; }
+  .ritual { font-size: 13px; color: var(--text-2); margin-top: 12px; }
+
+  .empty, .erro { background: var(--surface); border: 1px dashed var(--border); border-radius: 12px; padding: 28px 18px; text-align: center; color: var(--text-2); }
+  .loading { padding: 60px 0; text-align: center; color: var(--text-3); }
+  footer { margin-top: 32px; font-size: 12px; color: var(--text-3); }
+
+  @media (max-width: 520px) {
+    h1 { font-size: 20px; }
+    .grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .card { padding: 12px; }
+    .card .val { font-size: 20px; }
+    .card .lbl { font-size: 12px; }
+    .pill { font-size: 11px; padding: 2px 7px; }
+    .acao { padding: 12px; }
+  }
+  @media print {
+    body { background: #fff; }
+    .controls, .back, .chips, .btn-link, .atalho a, #secGrafico { display: none !important; }
+    .acao, .card, .leitura { break-inside: avoid; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="loading">Carregando indicadores…</div></div>
+
+<!-- Preenchido pelo Apps Script (doGet). Na página externa fica o texto literal e ACESSO vem do endereço (#p=...). -->
+<script type="application/json" id="acesso"><?!= acesso ?></script>
+<script>
+  // Endereço do Apps Script publicado: a página externa busca os dados em API_URL?formato=json.
+  var API_URL = 'https://script.google.com/macros/s/AKfycby7e4JDGT5ah8e0qY-JwyZexS04F3WhoGwxlY1_x3T9rKfKK7JGPaU6mXCWxGPbm3oo9A/exec';
+  var ACESSO = (function () {
+    try { return JSON.parse(document.getElementById('acesso').textContent); } catch (e) { return undefined; }
+  })();
+</script>
+<script>
+(function () {
+  'use strict';
+
+  var MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  var MESES_LONGO = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  var app = document.getElementById('app');
+  var estado = { dados: null, padariaIdx: null, mesChave: null, indicador: 'ticket', turma: '' };
+
+  /* ------------------------------------------------------------------ */
+  /* Plano de ação — base do Método Fermenta (Módulo 2 e encontros)       */
+  /* ------------------------------------------------------------------ */
+
+  // Variação mínima para o painel considerar que o indicador piorou/melhorou de um mês para o outro.
+  // rel = variação relativa em %; pp = pontos percentuais.
+  var GATILHO = {
+    faturamento: { rel: 5 }, clientes: { rel: 5 }, ticket: { rel: 2 },
+    cmv: { pp: 1 }, margemBruta: { pp: 1 }, prodGeral: { rel: 5 }, prodProducao: { rel: 5 },
+    folhaLB: { pp: 2 }, perdas: { pp: 1 }, rupturas: { pp: 1 },
+  };
+
+  // Quantas prioridades aparecem detalhadas; o restante vira uma lista curta.
+  var MAX_PRIORIDADES = 4;
+
+  var ACOES = {
+    ticket: {
+      titulo: 'Aumentar o ticket médio',
+      passos: [
+        'Antes de mexer no preço, descubra a causa: faltou produto da Curva A (ruptura)? A equipe parou de sugerir? O cliente trocou por itens mais baratos? A loja ficou sem nenhuma ação comercial?',
+        'Combine com o balcão uma sugestão fixa por atendimento (ex.: café com o pão de queijo, um doce com o pão da tarde) e confira no fim do dia se está acontecendo.',
+        'Monte 1 ou 2 combos com produtos da Curva A + um complemento de boa margem e deixe no ponto de maior fluxo da loja.',
+        'Programe uma ativação no mês (festival de um produto, degustação, combo do dia) para dar ao cliente um motivo de levar mais.',
+        'Anote o ticket de cada dia e compare com o mesmo dia da semana do ano passado. Se for criar meta para a equipe, confira antes se o ticket já não está subindo sozinho.',
+      ],
+      ref: 'Aula 2.15-B · Ticket Médio Histórico · Encontro ao vivo 1 (Ticket médio e precificação)',
+    },
+    clientes: {
+      titulo: 'Recuperar o fluxo de clientes',
+      passos: [
+        'Verifique se faltou produto nos horários de pico: cliente que não encontra o que veio buscar volta menos.',
+        'Compare com o mesmo mês do ano passado antes de concluir: feriados, férias e calor mudam o fluxo.',
+        'Garanta os produtos protegidos da Curva A abastecidos na abertura e no pico da tarde.',
+        'Reative quem já é cliente: avise no WhatsApp e nas redes as fornadas, novidades e combos da semana.',
+      ],
+      ref: 'Aula 2.12 · Ruptura · Aula 2.15-B · Ticket Médio Histórico',
+    },
+    cmv: {
+      titulo: 'Controlar o CMV com acompanhamento semanal de compras',
+      passos: [
+        'Toda segunda-feira, feche a semana anterior: compras da semana ÷ venda da semana. Se der, conte o estoque dos 2 ou 3 departamentos que mais pesam (ex.: confeitaria, salgados) e calcule estoque inicial + compras − estoque final.',
+        'Compre pelo giro: liste os 10 insumos que mais pesam nas compras, com estoque atual e consumo semanal, e só feche pedido depois de ver a cobertura em dias.',
+        'Registre cada pedido por escrito (pré-pedido) e confira a entrega e a nota fiscal contra ele antes de aceitar a mercadoria.',
+        'Cote pelo menos 2 ou 3 fornecedores para os itens do Top 10, olhando preço, prazo e condição de pagamento, não só o menor preço.',
+        'Confira se algum fornecedor reajustou preço sem você repassar, e se as fichas técnicas e a gramatura dos produtos Curva A estão sendo seguidas.',
+        'Não corte compra nem troque fornecedor por causa de uma semana ruim isolada: decida olhando a tendência de 3 a 4 semanas.',
+      ],
+      ref: 'Aula 2.13-B · CMV Semanal por Departamento · Encontro ao vivo 3 (Processo de Compras) · Aulas 2.3, 2.5 e 2.6',
+    },
+    folhaLB: {
+      titulo: 'Equilibrar a folha com o lucro bruto',
+      passos: [
+        'Veja primeiro se o problema é a folha ou o lucro bruto: se o CMV subiu, o lucro bruto encolheu e a folha passa a pesar mais sem ninguém ter sido contratado. Nesse caso, a prioridade é o CMV.',
+        'Levante as horas extras e dobras do mês: elas costumam ser sintoma de escala, calendário de produção ou processo, e não a causa.',
+        'Cruze a escala com a curva de vendas do dia: mais gente nos picos, menos nos horários vazios.',
+        'Antes de contratar ou repor uma vaga, identifique o gargalo (forno, bancada, pré-pesagem). Mais gente em cima de um gargalo é fila, não capacidade.',
+        'Trabalhe o outro lado da conta: ticket médio maior e CMV menor aumentam o lucro bruto e aliviam o indicador.',
+      ],
+      ref: 'Aula 2.15 · Produtividade · Encontro ao vivo 2 (DRE histórico)',
+    },
+    prodGeral: {
+      titulo: 'Melhorar a produtividade geral',
+      passos: [
+        'Confira o que mudou: o faturamento caiu ou a equipe cresceu? A resposta muda a ação.',
+        'Revise a escala da loja pela curva de vendas e pelo número de atendimentos por pessoa no balcão.',
+        'Antes de contratar, descubra onde o trabalho trava: espera, retrabalho, procura de ingrediente, deslocamento.',
+        'As ações de ticket médio e de ruptura aumentam o faturamento com a mesma equipe.',
+      ],
+      ref: 'Aula 2.15 · Produtividade por Colaborador e Setor',
+    },
+    prodProducao: {
+      titulo: 'Melhorar a produtividade da produção',
+      passos: [
+        'Escolha um setor (ex.: panificação) e registre por dia: pessoas, horas, produção, perdas e se a Ordem de Produção foi cumprida.',
+        'Implante a Ordem de Produção diária e o kit de pré-pesagem: a equipe espera e procura menos.',
+        'Distribua os produtos no calendário de produção da semana para evitar dias sobrecarregados e dias ociosos.',
+        'Revise a Curva C: produtos de pouca venda e muito trabalho podem sair da rotina e liberar capacidade.',
+        'Use o número para achar o gargalo, nunca para ranquear pessoas.',
+      ],
+      ref: 'Aulas 2.9 (Calendário), 2.10 (Ordem de Produção), 2.11 (Pré-pesagem), 2.14 (Curva C) e 2.15 (Produtividade)',
+    },
+    perdas: {
+      titulo: 'Reduzir as perdas',
+      passos: [
+        'Registre a perda na hora em que ela acontece: produto, quantidade, motivo e setor. Perda anotada de memória é perda subestimada.',
+        'Toda semana, faça o ranking das 10 maiores perdas em R$ e ataque as 2 primeiras, pelo valor, não pelo que mais incomoda.',
+        'Compare a perda de cada produto com a venda dele: acima de 10–12%, reduza a produção daquele dia da semana ou ajuste a Ordem de Produção.',
+        'Produto que sobra toda semana é candidato à Curva C: reduza a frequência ou pare de produzir.',
+        'Nunca desconte ou puna quem registra: se registrar vira punição, o registro some, a perda não.',
+        'Acompanhe a ruptura junto: cortar produção demais troca perda por falta de produto.',
+      ],
+      ref: 'Aula 2.13 · Perdas Diárias · Aula 2.14 · Curva C',
+    },
+    rupturas: {
+      titulo: 'Reduzir a ruptura na loja',
+      passos: [
+        'Defina os 10 produtos protegidos da Curva A e faça 2 checagens fixas por dia, antes dos picos, com um responsável com nome.',
+        'Classifique cada produto em verde, amarelo ou vermelho e acione a produção já no amarelo, antes de acabar.',
+        'Para cada ruptura, anote a causa: OP pequena, atraso na produção, falta de insumo ou produto pronto na retaguarda que não chegou ao balcão.',
+        'Ruptura que se repete no mesmo dia e horário é padrão: corrija a Ordem de Produção e o calendário daquele dia.',
+        'A solução para ruptura não é sobra: acompanhe as perdas junto.',
+      ],
+      ref: 'Aula 2.12 · Ruptura: 2 Checkpoints Diários · Aula 2.8 · Produtos Protegidos',
+    },
+  };
+
+  /* ---------- formatação ---------- */
+  var fBRL0 = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  var fBRL2 = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
+  var fN0 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
+  var fN1 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+  function fmt(v, unidade, chave) {
+    if (v == null || !isFinite(v)) return '—';
+    if (unidade === 'R$') return (chave === 'ticket' || Math.abs(v) < 100) ? fBRL2.format(v) : fBRL0.format(v);
+    if (unidade === '%') return fN1.format(v) + '%';
+    return fN0.format(v);
+  }
+  function fmtCurto(v, unidade) {
+    if (v == null) return '';
+    if (unidade === '%') return fN0.format(v) + '%';
+    var a = Math.abs(v), s;
+    if (a >= 1e6) s = fN1.format(v / 1e6) + ' mi';
+    else if (a >= 1e3) s = fN0.format(v / 1e3) + ' mil';
+    else s = fN0.format(v);
+    return unidade === 'R$' ? 'R$ ' + s : s;
+  }
+  function nomeMes(chave, longo) {
+    var p = chave.split('-');
+    var m = parseInt(p[1], 10) - 1;
+    return longo ? MESES_LONGO[m] + '/' + p[0] : MESES[m] + '/' + p[0].slice(2);
+  }
+  function chaveAnoAnterior(chave) {
+    var p = chave.split('-');
+    return (parseInt(p[0], 10) - 1) + '-' + p[1];
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  // Referência do indicador naquele mês: o CMV ideal muda com o mix de vendas de cada padaria/mês.
+  function refDe(ind, m) {
+    if (m && m.refs && m.refs[ind.chave] != null) return m.refs[ind.chave];
+    return ind.referencia;
+  }
+  function status(ind, v, m) {
+    var ref = refDe(ind, m);
+    if (ref == null || v == null || ind.direcao === 'neutra') return null;
+    return ind.direcao === 'menor' ? v <= ref : v >= ref;
+  }
+  function textoRef(ind, m) {
+    var ref = refDe(ind, m);
+    var ideal = m && m.refs && m.refs[ind.chave] != null;
+    return (ideal ? 'ideal ' : '') + (ind.direcao === 'menor' ? 'máx. ' : 'mín. ') + fmt(ref, ind.unidade, ind.chave);
+  }
+  function completos(meses) { return meses.filter(function (m) { return !m.historico; }); }
+  function porChave(d) {
+    var o = {};
+    d.indicadores.forEach(function (i) { o[i.chave] = i; });
+    return o;
+  }
+
+  /* ---------- comparação entre meses ---------- */
+  // Retorna { dif, txt, melhor, relevante } comparando v com o valor base.
+  function comparar(ind, v, base) {
+    if (v == null || base == null) return null;
+    var dif = v - base, txt, mag;
+    var g = GATILHO[ind.chave] || {};
+    if (ind.unidade === '%') {
+      txt = (dif >= 0 ? '+' : '−') + fN1.format(Math.abs(dif)) + ' p.p.';
+      mag = Math.abs(dif);
+    } else {
+      if (!base) return null;
+      mag = Math.abs(dif / base * 100);
+      txt = (dif >= 0 ? '+' : '−') + fN1.format(mag) + '%';
+    }
+    var limite = g.pp != null ? g.pp : g.rel != null ? g.rel : 0;
+    var melhor = dif === 0 || ind.direcao === 'neutra' ? null : (ind.direcao === 'menor' ? dif < 0 : dif > 0);
+    return { dif: dif, txt: txt, melhor: melhor, relevante: mag >= limite };
+  }
+
+  /* ---------- carregamento ---------- */
+  function carregar() {
+    app.innerHTML = '<div class="loading">Carregando indicadores…</div>';
+    if (typeof google !== 'undefined' && google.script && google.script.run) {
+      if (!ACESSO) return erro('Link inválido. Peça o link correto ao seu consultor do Sebrae.');
+      google.script.run
+        .withSuccessHandler(iniciar)
+        .withFailureHandler(function (e) { erro(e && e.message ? e.message : String(e)); })
+        .getDados(ACESSO);
+    } else if (acessoDoEndereco()) {
+      buscarDados(acessoDoEndereco());
+    } else if (location.protocol === 'file:' || /demo/.test(location.search + location.hash)) {
+      // Demonstração: arquivo aberto no computador, ou endereço com ?demo.
+      iniciar(demo(/admin/.test(location.search + location.hash) ? 'admin' : 'padaria'));
+    } else {
+      erro('Link inválido. Peça o link correto ao seu consultor do Sebrae.');
+    }
+  }
+
+  // Página externa: a chave vem depois do "#" (#p=TOKEN ou #admin=CHAVE).
+  function acessoDoEndereco() {
+    var m = /(?:^|[#&?])(p|admin)=([A-Za-z0-9]+)/.exec(location.hash + '&' + location.search);
+    if (!m) return null;
+    var a = { p: '', admin: '' };
+    a[m[1]] = m[2];
+    return a;
+  }
+
+  // Sem cookies (padrão do fetch entre domínios): o Google trata como visitante anônimo,
+  // e o link funciona mesmo com várias contas logadas no navegador.
+  function buscarDados(a) {
+    fetch(API_URL + '?formato=json&p=' + encodeURIComponent(a.p) + '&admin=' + encodeURIComponent(a.admin))
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (res.ok) iniciar(res.dados);
+        else erro(res.erro || 'Não foi possível carregar os dados.');
+      })
+      .catch(function () { erro('Não foi possível carregar os dados. Verifique a internet e toque em Atualizar.'); });
+  }
+  function erro(msg) { app.innerHTML = '<div class="erro">' + esc(msg) + '</div>'; }
+
+  function iniciar(dados) {
+    var anterior = estado.dados;
+    estado.dados = dados;
+    if (dados.modo === 'padaria') estado.padariaIdx = 0;
+    else if (!anterior) estado.padariaIdx = null;
+    estado.mesChave = null;
+    render();
+  }
+
+  function render() {
+    var d = estado.dados;
+    if (d.modo === 'admin' && estado.padariaIdx == null) renderAdmin(d);
+    else renderPadaria(d, d.padarias[estado.padariaIdx]);
+  }
+
+  /* ---------- visão da padaria ---------- */
+  function renderPadaria(d, pad) {
+    // meses = completos (formulário do mês) + meses só do histórico (faturamento e clientes).
+    var meses = pad.meses, cheios = completos(meses);
+    if (!estado.mesChave || !cheios.some(function (m) { return m.chave === estado.mesChave; })) {
+      estado.mesChave = cheios.length ? cheios[cheios.length - 1].chave : null;
+    }
+    var idx = meses.findIndex(function (m) { return m.chave === estado.mesChave; });
+    var atual = idx >= 0 ? meses[idx] : null, ant = idx > 0 ? meses[idx - 1] : null;
+    var aa = atual ? meses.find(function (m) { return m.chave === chaveAnoAnterior(atual.chave); }) : null;
+    var pendente = !cheios.some(function (m) { return m.chave === d.mesReferencia; });
+    var temHistorico = meses.some(function (m) { return m.historico; });
+    var h = '';
+
+    if (d.modo === 'admin') h += '<button class="back" data-acao="voltar">← Todas as padarias</button>';
+    h += '<header><div><p class="eyebrow">Prepara a Padaria' + (pad.turma ? ' · ' + esc(pad.turma) : '') + ' · Painel de indicadores</p>' +
+      '<h1>' + esc(pad.nome) + '</h1>' +
+      '<div class="sub">Atualizado em ' + esc(d.geradoEm) + (atual ? ' · último envio de ' + esc(nomeMes(atual.chave, true)) + ' em ' + esc(atual.enviadoEm) : '') + '</div></div>' +
+      '<div class="controls">' +
+      (cheios.length ? '<select id="selMes" aria-label="Mês">' +
+        cheios.slice().reverse().map(function (m) {
+          return '<option value="' + m.chave + '"' + (m.chave === estado.mesChave ? ' selected' : '') + '>' + nomeMes(m.chave, true) + '</option>';
+        }).join('') + '</select>' : '') +
+      '<button data-acao="atualizar">Atualizar</button></div></header>';
+
+    var link = pad.linkForm;
+    if (pendente) {
+      h += '<div class="banner"><p><strong>Faltam os números de ' + esc(nomeMes(d.mesReferencia, true)) + '.</strong> ' +
+        (d.modo === 'admin' ? 'Esta padaria ainda não enviou o mês.' : 'Preencha o formulário para atualizar o painel.') + '</p>' +
+        (link && d.modo !== 'admin' ? '<a class="btn-link" href="' + esc(link) + '" target="_blank" rel="noopener">Preencher agora</a>' : '') + '</div>';
+    }
+    if (!temHistorico) {
+      h += '<div class="atalho" style="margin-bottom:12px"><span>' + (d.modo === 'admin'
+        ? 'Esta padaria ainda não enviou o histórico de 12 meses.'
+        : '<strong>Envie o histórico dos últimos 12 meses</strong> (faturamento e clientes) para comparar cada mês com o mesmo mês do ano anterior. É uma vez só.') + '</span>' +
+        (pad.linkHistorico && d.modo !== 'admin' ? '<a href="' + esc(pad.linkHistorico) + '" target="_blank" rel="noopener">Enviar histórico →</a>' : '') + '</div>';
+    }
+
+    if (!atual) {
+      app.innerHTML = h + '<div class="empty">Ainda não há dados enviados por esta padaria.</div>';
+      ligar();
+      return;
+    }
+
+    var plano = montarPlano(d, atual, ant, aa);
+    h += '<div class="atalho"><span>' + (plano.itens.length
+      ? '<strong>' + Math.min(plano.itens.length, MAX_PRIORIDADES) + (plano.itens.length === 1 ? ' prioridade' : ' prioridades') + '</strong> no plano de ação de ' + esc(nomeMes(atual.chave, true))
+      : 'Nenhum alerta em ' + esc(nomeMes(atual.chave, true))) + '</span><a href="#plano" data-acao="irPlano">Ver plano de ação ↓</a></div>';
+
+    h += '<h2>' + esc(nomeMes(atual.chave, true)) + '</h2><div class="grid">';
+    d.indicadores.forEach(function (ind) {
+      var v = atual.ind[ind.chave];
+      var st = status(ind, v, atual);
+      var pill = st == null
+        ? (refDe(ind, atual) == null || ind.direcao === 'neutra' ? '' : '<span class="pill na">sem dado</span>')
+        : '<span class="pill ' + (st ? 'ok' : 'no') + '">' + (st ? '✓ Dentro' : '! Fora') + ' · ' + esc(textoRef(ind, atual)) + '</span>';
+      h += '<button class="card' + (ind.chave === estado.indicador ? ' sel' : '') + '" data-ind="' + ind.chave + '">' +
+        '<span class="lbl">' + esc(ind.nome) + '</span>' +
+        '<span class="val num">' + fmt(v, ind.unidade, ind.chave) + '</span>' +
+        detalhe(ind.chave, atual) + pill + linhaDelta(ind, v, ant) + linhaDelta(ind, v, aa) + '</button>';
+    });
+    h += '</div>';
+
+    h += tabelaCmvPorTipo(atual);
+
+    h += '<div id="secGrafico"><h2>Evolução</h2><div class="panel"><div class="chips" role="group" aria-label="Indicador do gráfico">' +
+      d.indicadores.map(function (ind) {
+        return '<button class="chip" data-ind="' + ind.chave + '" aria-pressed="' + (ind.chave === estado.indicador) + '">' + esc(nomeCurto(ind)) + '</button>';
+      }).join('') + '</div><div id="grafico"></div></div></div>';
+
+    h += '<h2>Números informados em ' + esc(nomeMes(atual.chave, true)) + '</h2>' + tabelaBruto(d, atual);
+    h += '<h2>Histórico</h2>' + tabelaHistorico(d, meses);
+    h += renderPlano(plano, atual, ant);
+    h += '<footer>Faturamento = produção própria + produção terceirizada + revenda. ' +
+      'CMV real = estoque inicial + compras − estoque final (quando a padaria informa o estoque); caso contrário, CMV = compras do mês. ' +
+      'CMV ideal = média ponderada pelo mix de vendas (' + pesosTxt(d) + '). ' +
+      'Lucro bruto = faturamento − CMV. Perdas e ruptura vêm dos controles da própria padaria. Meses marcados como "histórico" têm só faturamento e clientes. ' +
+      'Quando o mesmo mês é enviado mais de uma vez, vale o último envio.</footer>';
+
+    app.innerHTML = h;
+    grafico(d, meses);
+    ligar();
+  }
+
+  function nomeCurto(ind) {
+    return ({ faturamento: 'Faturamento', clientes: 'Clientes', ticket: 'Ticket médio', cmv: 'CMV', margemBruta: 'Margem bruta',
+      prodGeral: 'Produtividade geral', prodProducao: 'Produtividade produção', folhaLB: 'Folha ÷ lucro bruto',
+      perdas: 'Perdas', rupturas: 'Ruptura', precoPao: 'Pão francês (kg)' })[ind.chave] || ind.nome;
+  }
+
+  function pesosTxt(d) {
+    var p = d.pesosCmv || {};
+    return 'própria ' + fN0.format(p.cmvPropria) + '% · terceirizada ' + fN0.format(p.cmvTerceirizada) + '% · revenda ' + fN0.format(p.cmvRevenda) + '%';
+  }
+
+  function detalhe(chave, m) {
+    var b = m.bruto, t = '';
+    if (chave === 'faturamento' && b.faturamento) {
+      var pc = function (x) { return fN0.format((x || 0) / b.faturamento * 100) + '%'; };
+      t = 'Própria ' + pc(b.fatProducao) + ' · terceirizada ' + pc(b.fatTerceirizada) + ' · revenda ' + pc(b.fatRevenda) + (m.fatAproximado ? ' (aproximado)' : '');
+    }
+    if (chave === 'cmv') t = fmt(b.cmv, 'R$') + ' · calculado por ' + (m.cmvMetodo === 'estoque' ? 'estoque' : 'compras') +
+      (b.cmvIdeal != null ? ' · ideal para o seu mix: ' + fmt(b.cmvIdeal, '%') : '');
+    if (chave === 'margemBruta') t = 'Lucro bruto ' + fmt(b.lucroBruto, 'R$');
+    if (chave === 'prodGeral') t = b.funcionarios != null ? fN0.format(b.funcionarios) + ' pessoas' : '';
+    if (chave === 'prodProducao') t = b.funcProducao != null ? fN0.format(b.funcProducao) + ' pessoas · fat. ' + fmt(b.fatProducao, 'R$') : '';
+    if (chave === 'folhaLB') t = 'Folha ' + fmt(b.folha, 'R$');
+    return t ? '<span class="det num">' + esc(t) + '</span>' : '';
+  }
+
+  function linhaDelta(ind, v, base) {
+    if (!base) return '';
+    var c = comparar(ind, v, base.ind[ind.chave]);
+    if (!c) return '';
+    var seta = c.dif > 0 ? '▲' : c.dif < 0 ? '▼' : '=';
+    return '<span class="delta num">' + seta + ' ' + c.txt + ' vs ' + nomeMes(base.chave) +
+      (c.melhor == null ? '' : ' · ' + (c.melhor ? 'melhorou' : 'piorou')) + '</span>';
+  }
+
+  function tabelaBruto(d, m) {
+    var b = m.bruto;
+    var linhas = [
+      ['Faturamento · produção própria', fmt(b.fatProducao, 'R$')],
+      ['Faturamento · produção terceirizada', fmt(b.fatTerceirizada, 'R$')],
+      ['Faturamento · revenda de mercadorias', fmt(b.fatRevenda, 'R$')],
+      ['<strong>Faturamento total</strong>' + (m.fatAproximado ? ' (valores aproximados)' : ''), '<strong>' + fmt(b.faturamento, 'R$') + '</strong>'],
+      ['Número de clientes', fmt(b.clientes, 'un')],
+      ['Preço do pão francês (kg)', fmt(m.ind.precoPao, 'R$', 'ticket')],
+    ];
+    if (b.comprasMP != null) {
+      linhas.push(['Compras · matéria-prima', fmt(b.comprasMP, 'R$')]);
+      linhas.push(['Compras · produção terceirizada', fmt(b.comprasTerc, 'R$')]);
+      linhas.push(['Compras · revenda', fmt(b.comprasRev, 'R$')]);
+    }
+    linhas.push(['<strong>Compras do mês</strong>' + (b.comprasMP != null && !m.comprasSeparadas ? ' (não separadas por tipo)' : ''), '<strong>' + fmt(b.compras, 'R$') + '</strong>']);
+    if (m.cmvMetodo === 'estoque') {
+      linhas.push(['Estoque inicial', fmt(b.estoqueInicial, 'R$')]);
+      linhas.push(['Estoque final', fmt(b.estoqueFinal, 'R$')]);
+    }
+    linhas.push(['CMV real (' + (m.cmvMetodo === 'estoque' ? 'por estoque' : 'por compras') + ')', fmt(b.cmv, 'R$') + ' · ' + fmt(m.ind.cmv, '%')]);
+    linhas.push(['CMV ideal para o mix (' + pesosTxt(d) + ')', fmt(b.cmvIdeal, '%')]);
+    linhas.push(['Lucro bruto', fmt(b.lucroBruto, 'R$')]);
+    linhas.push(['Folha de pagamento (custo total)', fmt(b.folha, 'R$')]);
+    linhas.push(['Pessoas na padaria', fmt(b.funcionarios, 'un')]);
+    linhas.push(['Pessoas na produção própria', fmt(b.funcProducao, 'un')]);
+    linhas.push(['Perdas (% sobre as vendas)', fmt(m.ind.perdas, '%')]);
+    linhas.push(['Ruptura de produtos na loja', fmt(m.ind.rupturas, '%')]);
+    if (m.obs) linhas.push(['Observações', esc(m.obs)]);
+    return '<div class="tbl-wrap"><table class="kv"><tbody>' + linhas.map(function (l) {
+      return '<tr><td>' + l[0] + '</td><td style="white-space:normal">' + l[1] + '</td></tr>';
+    }).join('') + '</tbody></table></div>';
+  }
+
+  // CMV de cada tipo de venda = compras do tipo ÷ faturamento do tipo, comparado ao ideal do tipo.
+  function tabelaCmvPorTipo(m) {
+    var h = '<h2>CMV por tipo de venda</h2>';
+    if (!m.cmvPorTipo || !m.cmvPorTipo.length) {
+      return m.bruto.comprasMP != null
+        ? h + '<p class="plano-intro">As compras deste mês não foram separadas por tipo (tudo foi lançado em matéria-prima). Separe as compras no formulário para ver o CMV da produção própria, da terceirizada e da revenda.</p>'
+        : '';
+    }
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Tipo</th><th>Faturamento</th><th>Compras</th><th>CMV</th><th>Ideal</th><th>Situação</th></tr></thead><tbody>';
+    m.cmvPorTipo.forEach(function (t) {
+      var st = t.cmv == null ? null : t.cmv <= t.ideal;
+      h += '<tr><td>' + esc(t.tipo) + '</td><td>' + fmt(t.fat, 'R$') + '</td><td>' + fmt(t.compras, 'R$') + '</td>' +
+        '<td class="' + (st == null ? '' : st ? 'ok' : 'no') + '">' + fmt(t.cmv, '%') + '</td><td>' + fmt(t.ideal, '%') + '</td>' +
+        '<td>' + (st == null ? '—' : '<span class="tag ' + (st ? 'ok' : 'no') + '">' + (st ? '✓ dentro' : '! acima ' + fN1.format(t.cmv - t.ideal) + ' p.p.') + '</span>') + '</td></tr>';
+    });
+    return h + '</tbody></table></div><p class="chart-note">Calculado pelas compras de cada tipo no mês. O estoque não é separado por tipo, então um mês com compra grande para estoque pode aparecer acima do ideal.</p>';
+  }
+
+  function tabelaHistorico(d, meses) {
+    var inds = d.indicadores;
+    var h = '<div class="tbl-wrap"><table><thead><tr><th>Mês</th>' +
+      inds.map(function (i) { return '<th>' + esc(nomeCurto(i)) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    meses.slice().reverse().forEach(function (m) {
+      h += '<tr><td>' + nomeMes(m.chave) + (m.historico ? ' <span class="tag na">histórico</span>' : '') + '</td>' + inds.map(function (i) {
+        var v = m.ind[i.chave], st = status(i, v, m);
+        return '<td class="' + (st == null ? '' : st ? 'ok' : 'no') + '">' + (st === false ? '! ' : '') + fmt(v, i.unidade, i.chave) + '</td>';
+      }).join('') + '</tr>';
+    });
+    return h + '</tbody></table></div>';
+  }
+
+  /* ---------- plano de ação: diagnóstico ---------- */
+  function montarPlano(d, atual, ant, aa) {
+    var I = porChave(d);
+    var s = {}; // situação de cada indicador
+    Object.keys(I).forEach(function (k) {
+      var ind = I[k], v = atual.ind[k];
+      var cm = ant ? comparar(ind, v, ant.ind[k]) : null;
+      var ca = aa ? comparar(ind, v, aa.ind[k]) : null;
+      s[k] = {
+        ind: ind, v: v, cm: cm, ca: ca, mes: atual,
+        fora: status(ind, v, atual) === false,
+        piorou: !!(cm && cm.relevante && cm.melhor === false),
+        melhorou: !!(cm && cm.relevante && cm.melhor === true),
+      };
+    });
+
+    // Leitura cruzada: "os números juntos contam uma história que nenhum deles conta sozinho" (Aula 2.16).
+    var leituras = [];
+    var F = s.faturamento, C = s.clientes, T = s.ticket;
+    if (F.cm && F.cm.relevante && C.cm && T.cm) {
+      leituras.push('O faturamento ' + (F.cm.dif < 0 ? 'caiu' : 'subiu') + ' ' + F.cm.txt.replace(/^[+−]/, '') + ' em relação a ' + nomeMes(ant.chave) +
+        ': o número de clientes variou ' + C.cm.txt + ' e o ticket médio ' + T.cm.txt + '.');
+    }
+    if (T.piorou && (s.rupturas.piorou || s.rupturas.fora))
+      leituras.push('O ticket caiu no mesmo mês em que a ruptura ' + (s.rupturas.piorou ? 'subiu' : 'ficou acima da referência') + ': parte da venda pode ter sido perdida por falta de produto, e não por desinteresse do cliente. Comece pela ruptura.');
+    if (C.piorou && T.melhorou)
+      leituras.push('Quem veio comprou mais, mas veio menos gente: a questão é fluxo de clientes, não o atendimento no balcão.');
+    var ideal = atual.bruto.cmvIdeal;
+    if (s.cmv.fora && ideal != null && atual.bruto.faturamento) {
+      var excesso = (s.cmv.v - ideal) / 100 * atual.bruto.faturamento;
+      leituras.push('O CMV real (' + fmt(s.cmv.v, '%') + ') está ' + fN1.format(s.cmv.v - ideal) + ' p.p. acima do CMV ideal para o seu mix de vendas (' +
+        fmt(ideal, '%') + '). Isso representa cerca de ' + fmt(excesso, 'R$') + ' a mais de custo neste mês' +
+        (atual.fatAproximado ? ' (estimativa: a divisão do faturamento foi informada como aproximada).' : '.'));
+    }
+    // Onde o CMV está estourando: tipos de venda com compras acima do ideal (tolerância de 2 p.p.).
+    (atual.cmvPorTipo || []).forEach(function (t) {
+      if (t.cmv == null || !t.fat || t.cmv <= t.ideal + 2) return;
+      leituras.push('Na ' + t.tipo.toLowerCase() + ', as compras foram ' + fmt(t.cmv, '%') + ' do faturamento do tipo (ideal ' + fmt(t.ideal, '%') +
+        '): cerca de ' + fmt((t.cmv - t.ideal) / 100 * t.fat, 'R$') + ' acima. Comece o controle semanal de compras por aqui.');
+    });
+    if ((s.cmv.piorou || s.cmv.fora) && s.perdas.piorou)
+      leituras.push('CMV e perdas subiram juntos: a perda é a causa mais provável do CMV alto. Ataque primeiro o ranking de perdas.');
+    else if (s.cmv.piorou && !s.perdas.piorou)
+      leituras.push('O CMV subiu sem aumento de perdas: investigue as compras (quantidade e preço), reajuste de fornecedor não repassado e se as fichas técnicas estão sendo seguidas.');
+    if (s.cmv.piorou && atual.cmvMetodo === 'compras')
+      leituras.push('O CMV deste mês foi calculado só pelas compras. Um mês com compra grande para estoque aparece como CMV alto: faça a contagem de estoque para confirmar.');
+    if ((s.folhaLB.fora || s.folhaLB.piorou) && (s.cmv.fora || s.cmv.piorou))
+      leituras.push('A folha está pesando mais porque o lucro bruto encolheu com o CMV alto. Antes de mexer na equipe, corrija o CMV.');
+    if (s.prodProducao.piorou && s.folhaLB.piorou)
+      leituras.push('A produtividade da produção caiu e a folha pesou mais: revise escala e gargalos antes de contratar ou repor vagas.');
+    if ((s.rupturas.piorou || s.rupturas.fora) && (s.perdas.melhorou || (s.perdas.v != null && s.perdas.v < 5)))
+      leituras.push('Perdas baixas ou em queda com ruptura alta sugerem produção abaixo da demanda. O objetivo é disponibilidade sem sobra, não cortar produção.');
+
+    // Prioridades: fora da referência e piorando > fora da referência > piorando.
+    var ordem = ['rupturas', 'cmv', 'ticket', 'perdas', 'folhaLB', 'prodProducao', 'prodGeral', 'clientes'];
+    // Se a leitura cruzada aponta a causa, a causa sobe na fila.
+    if (T.piorou && (s.rupturas.piorou || s.rupturas.fora)) ordem = ['rupturas', 'ticket'].concat(ordem.filter(function (k) { return k !== 'rupturas' && k !== 'ticket'; }));
+    if ((s.folhaLB.fora || s.folhaLB.piorou) && (s.cmv.fora || s.cmv.piorou)) ordem = ['cmv'].concat(ordem.filter(function (k) { return k !== 'cmv'; }));
+    if ((s.cmv.piorou || s.cmv.fora) && s.perdas.piorou) ordem = ['perdas', 'cmv'].concat(ordem.filter(function (k) { return k !== 'perdas' && k !== 'cmv'; }));
+
+    var itens = [];
+    ordem.forEach(function (k, pos) {
+      var x = s[k];
+      if (!x || x.v == null || !(x.fora || x.piorou)) return;
+      var peso = (x.fora ? 2 : 0) + (x.piorou ? 1 : 0);
+      itens.push({ chave: k, peso: peso, pos: pos, porque: porque(x, ant, aa), meta: meta(x, ant) });
+    });
+    itens.sort(function (a, b) { return b.peso - a.peso || a.pos - b.pos; });
+
+    var manter = [];
+    Object.keys(s).forEach(function (k) {
+      var x = s[k];
+      if (x.melhorou && !x.fora && ACOES[k]) manter.push(nomeCurto(x.ind) + ' ' + (x.ind.direcao === 'menor' ? 'caiu' : 'subiu') + ' ' + x.cm.txt.replace(/^[+−]/, '') + ' vs ' + nomeMes(ant.chave));
+    });
+
+    return { itens: itens, leituras: leituras, manter: manter };
+  }
+
+  function porque(x, ant, aa) {
+    var ind = x.ind, partes = [];
+    partes.push(nomeCurto(ind) + ' em ' + fmt(x.v, ind.unidade, ind.chave));
+    if (x.piorou) partes.push((x.cm.dif > 0 ? 'subiu ' : 'caiu ') + x.cm.txt.replace(/^[+−]/, '') + ' em relação a ' + nomeMes(ant.chave) + ' (' + fmt(ant.ind[ind.chave], ind.unidade, ind.chave) + ')');
+    if (x.fora) partes.push('fora da referência do Método (' + textoRef(ind, x.mes) + ')');
+    var t = partes[0] + (partes.length > 1 ? ': ' + partes.slice(1).join(' e ') : '') + '.';
+    if (x.ca) t += ' Comparado ao mesmo mês do ano passado (' + nomeMes(aa.chave) + '): ' + x.ca.txt.replace(/\.$/, '') + '.';
+    return t;
+  }
+
+  function meta(x, ant) {
+    var ind = x.ind;
+    if (x.fora) return 'Meta: ' + (ind.direcao === 'menor' ? 'chegar a no máximo ' : 'chegar a pelo menos ') + fmt(refDe(ind, x.mes), ind.unidade, ind.chave) +
+      (x.mes.refs && x.mes.refs[ind.chave] != null ? ' (ideal para o seu mix de vendas)' : '');
+    return 'Meta: voltar ao nível de ' + nomeMes(ant.chave) + ' (' + fmt(ant.ind[ind.chave], ind.unidade, ind.chave) + ')';
+  }
+
+  function renderPlano(plano, atual, ant) {
+    var h = '<h2 id="plano">Plano de ação · ' + esc(nomeMes(atual.chave, true)) + '</h2>';
+    if (!ant && !plano.itens.length) {
+      return h + '<p class="plano-intro">O plano de ação compara um mês com o anterior. Ele aparece completo a partir do segundo mês enviado.</p>';
+    }
+    h += '<p class="plano-intro">Ações para o proprietário, a partir do que o painel mostrou neste mês. Cada número é um sinal para investigar, não uma sentença: confirme a causa antes de agir.</p>';
+
+    if (plano.leituras.length) {
+      h += '<div class="leitura"><p class="t">Leitura do mês</p>' + plano.leituras.map(function (l) { return '<p>' + esc(l) + '</p>'; }).join('') + '</div>';
+    }
+
+    if (!plano.itens.length) {
+      h += '<div class="empty">Nenhum indicador fora da referência ou piorando neste mês. Mantenha as rotinas que trouxeram esse resultado.</div>';
+    } else {
+      var top = plano.itens.slice(0, 3);
+      h += '<div class="semana"><h3>Para começar esta semana</h3><ol>' + top.map(function (it) {
+        return '<li><strong>' + esc(ACOES[it.chave].titulo) + ':</strong> ' + esc(ACOES[it.chave].passos[0]) + '</li>';
+      }).join('') + '</ol></div>';
+
+      plano.itens.slice(0, MAX_PRIORIDADES).forEach(function (it, i) {
+        var a = ACOES[it.chave];
+        h += '<div class="acao"><div class="acao-top"><span class="prio">' + (i + 1) + '</span><div>' +
+          '<h3>' + esc(a.titulo) + '</h3><p class="porque">' + esc(it.porque) + '</p>' +
+          '<span class="meta">' + esc(it.meta) + '</span></div></div>' +
+          '<ol>' + a.passos.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ol>' +
+          '<p class="ref">Ferramentas: ' + esc(a.ref) + '</p></div>';
+      });
+      var extras = plano.itens.slice(MAX_PRIORIDADES);
+      if (extras.length) {
+        h += '<div class="leitura"><p class="t">Também acompanhar (depois das prioridades acima)</p>' + extras.map(function (it) {
+          return '<p><strong>' + esc(ACOES[it.chave].titulo) + ':</strong> ' + esc(it.porque) + '</p>';
+        }).join('') + '</div>';
+      }
+    }
+
+    if (plano.manter.length) {
+      h += '<div class="manter"><h3>✓ O que melhorou: mantenha</h3><ul>' + plano.manter.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul></div>';
+    }
+    h += '<p class="ritual"><strong>Rotina que sustenta o plano (Aula 2.16):</strong> todo dia, ruptura e ticket médio (2 a 3 minutos); uma vez por semana, em dia fixo, perdas, CMV semanal e produtividade (15 a 20 minutos).</p>';
+    return h;
+  }
+
+  /* ---------- gráfico de barras (últimos 12 meses) ---------- */
+  function grafico(d, meses) {
+    var alvo = document.getElementById('grafico');
+    if (!alvo) return;
+    var ind = d.indicadores.find(function (i) { return i.chave === estado.indicador; });
+    var serie = meses.slice(-12);
+    var W = Math.max(300, alvo.clientWidth), H = 220;
+    var m = { t: 18, r: 8, b: 26, l: 58 };
+    var iw = W - m.l - m.r, ih = H - m.t - m.b;
+    var vals = serie.map(function (s) { return s.ind[ind.chave]; }).filter(function (v) { return v != null; });
+    // Referência por mês (CMV ideal varia com o mix) ou fixa.
+    var refs = serie.map(function (p) { return p.historico ? null : refDe(ind, p); });
+    var refVaria = serie.some(function (p) { return p.refs && p.refs[ind.chave] != null; });
+    refs.forEach(function (r) { if (r != null) vals.push(r); });
+    if (ind.referencia != null) vals.push(ind.referencia);
+    var max = Math.max.apply(null, vals.concat([0])), min = Math.min.apply(null, vals.concat([0]));
+    if (max === min) max = min + 1;
+    var passo = passoBonito((max - min) / 4);
+    max = Math.ceil(max / passo) * passo; min = Math.floor(min / passo) * passo;
+    var y = function (v) { return m.t + ih - (v - min) / (max - min) * ih; };
+    var slot = iw / Math.max(serie.length, 1);
+    var bw = Math.min(44, slot - 2 - slot * 0.25);
+
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(ind.nome) + ' nos últimos meses">';
+    for (var v = min; v <= max + passo / 2; v += passo) {
+      s += '<line class="grid-line" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y(v) + '" y2="' + y(v) + '"/>' +
+        '<text x="' + (m.l - 8) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + esc(fmtCurto(v, ind.unidade)) + '</text>';
+    }
+    serie.forEach(function (p, i) {
+      var cx = m.l + slot * i + slot / 2, v = p.ind[ind.chave];
+      if (v != null) {
+        var y0 = y(0), y1 = y(v), top = Math.min(y0, y1), alt = Math.max(Math.abs(y0 - y1), 1);
+        var r = Math.min(4, alt, bw / 2);
+        s += '<path class="bar' + (p.chave === estado.mesChave ? '' : ' dim') + '" d="' + barra(cx - bw / 2, top, bw, alt, r, v >= 0) + '"/>';
+      }
+      s += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + nomeMes(p.chave).split('/')[0] + '</text>' +
+        '<rect class="hit" data-i="' + i + '" x="' + (m.l + slot * i) + '" y="' + m.t + '" width="' + slot + '" height="' + ih + '"/>';
+    });
+    if (min < 0) s += '<line class="zero" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y(0) + '" y2="' + y(0) + '"/>';
+    if (refVaria) {
+      // Um traço por mês na altura do CMV ideal daquele mês.
+      refs.forEach(function (r, i) {
+        if (r == null) return;
+        var x0 = m.l + slot * i + slot * 0.08, yr = y(r);
+        s += '<line class="ref-line" x1="' + x0 + '" x2="' + (x0 + slot * 0.84) + '" y1="' + yr + '" y2="' + yr + '"/>';
+      });
+      var ultRef = refs.filter(function (r) { return r != null; }).pop();
+      if (ultRef != null) s += '<text class="ref-lbl" x="' + (W - m.r) + '" y="' + (m.t - 6) + '" text-anchor="end">- - - ideal para o mix de cada mês</text>';
+    } else if (ind.referencia != null) {
+      var yr = y(ind.referencia);
+      s += '<line class="ref-line" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + yr + '" y2="' + yr + '"/>' +
+        '<text class="ref-lbl" x="' + (W - m.r) + '" y="' + (yr - 6) + '" text-anchor="end">Referência ' + esc(textoRef(ind)) + '</text>';
+    }
+    s += '</svg>';
+
+    alvo.innerHTML = '<p class="chart-title">' + esc(ind.nome) + '</p>' +
+      '<p class="chart-note">' + (serie.length ? 'Últimos ' + serie.length + (serie.length === 1 ? ' mês' : ' meses') + ' · barra escura = mês selecionado' : 'Sem dados') + '</p>' +
+      '<div class="chart">' + s + '<div class="tip" id="tip"></div></div>';
+
+    var tip = document.getElementById('tip'), chart = alvo.querySelector('.chart');
+    chart.querySelectorAll('.hit').forEach(function (r) {
+      var mostrar = function () {
+        var p = serie[+r.getAttribute('data-i')], v = p.ind[ind.chave], st = status(ind, v, p);
+        var box = chart.getBoundingClientRect(), rb = r.getBoundingClientRect();
+        tip.innerHTML = '<strong>' + nomeMes(p.chave, true) + '</strong> · ' + fmt(v, ind.unidade, ind.chave) +
+          (st == null ? '' : ' · ' + (st ? '✓ dentro' : '! fora')) +
+          (refVaria && refs[+r.getAttribute('data-i')] != null ? ' · ideal ' + fmt(refs[+r.getAttribute('data-i')], '%') : '') +
+          (p.historico ? ' · histórico' : '');
+        tip.style.display = 'block';
+        // Mantém o balão dentro do gráfico nas barras das pontas.
+        var meio = tip.offsetWidth / 2, cx = rb.left - box.left + rb.width / 2;
+        tip.style.left = Math.max(meio, Math.min(box.width - meio, cx)) + 'px';
+        tip.style.top = (v != null ? y(Math.max(v, 0)) * box.height / H : m.t) + 'px';
+      };
+      r.addEventListener('mouseenter', mostrar);
+      r.addEventListener('click', function () {
+        var p = serie[+r.getAttribute('data-i')];
+        if (p.historico) return mostrar();
+        estado.mesChave = p.chave;
+        render();
+      });
+      r.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+    });
+  }
+
+  function passoBonito(bruto) {
+    var p = Math.pow(10, Math.floor(Math.log10(bruto || 1))), n = bruto / p;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p;
+  }
+  // Barra com as pontas arredondadas só do lado do valor (base reta no zero).
+  function barra(x, y, w, h, r, positiva) {
+    if (positiva) return 'M' + x + ',' + (y + h) + 'V' + (y + r) + 'Q' + x + ',' + y + ' ' + (x + r) + ',' + y +
+      'H' + (x + w - r) + 'Q' + (x + w) + ',' + y + ' ' + (x + w) + ',' + (y + r) + 'V' + (y + h) + 'Z';
+    return 'M' + x + ',' + y + 'V' + (y + h - r) + 'Q' + x + ',' + (y + h) + ' ' + (x + r) + ',' + (y + h) +
+      'H' + (x + w - r) + 'Q' + (x + w) + ',' + (y + h) + ' ' + (x + w) + ',' + (y + h - r) + 'V' + y + 'Z';
+  }
+
+  /* ---------- visão geral da consultoria ---------- */
+  function renderAdmin(d) {
+    var ref = d.mesReferencia;
+    var turmas = [];
+    d.padarias.forEach(function (p) { if (p.turma && turmas.indexOf(p.turma) < 0) turmas.push(p.turma); });
+    if (estado.turma && turmas.indexOf(estado.turma) < 0) estado.turma = '';
+    var lista = d.padarias.map(function (p, idx) { return { p: p, idx: idx }; })
+      .filter(function (x) { return !estado.turma || x.p.turma === estado.turma; });
+
+    var chaves = ['ticket', 'cmv', 'folhaLB', 'prodGeral', 'prodProducao', 'perdas', 'rupturas'];
+    var I = porChave(d);
+    var inds = chaves.map(function (c) { return I[c]; });
+    var enviaram = lista.filter(function (x) { return completos(x.p.meses).some(function (m) { return m.chave === ref; }); }).length;
+
+    var h = '<header><div><p class="eyebrow">Prepara a Padaria · Visão da consultoria</p><h1>' + (estado.turma ? esc(estado.turma) : 'Todas as padarias') + '</h1>' +
+      '<div class="sub">Atualizado em ' + esc(d.geradoEm) + '</div></div>' +
+      '<div class="controls">' +
+      (turmas.length > 1 ? '<select id="selTurma" aria-label="Turma"><option value="">Todas as turmas</option>' +
+        turmas.map(function (t) { return '<option' + (t === estado.turma ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('') + '</select>' : '') +
+      '<button data-acao="atualizar">Atualizar</button></div></header>';
+    h += '<div class="grid" style="margin-bottom:8px">' +
+      '<div class="card"><span class="lbl">Enviaram ' + esc(nomeMes(ref, true)) + '</span><span class="val num">' + enviaram + ' de ' + lista.length + '</span></div>' +
+      '<div class="card"><span class="lbl">Pendentes</span><span class="val num">' + (lista.length - enviaram) + '</span><span class="det">cobrar no grupo</span></div></div>';
+
+    h += '<h2>Último mês enviado por padaria</h2><div class="tbl-wrap"><table><thead><tr><th>Padaria</th><th>' + esc(nomeMes(ref)) + '</th><th>Histórico</th><th>Último mês</th><th>Prioridades</th>' +
+      inds.map(function (i) { return '<th>' + esc(nomeCurto(i)) + '</th>'; }).join('') + '</tr></thead><tbody>';
+    lista.forEach(function (x) {
+      var p = x.p, ms = p.meses, cheios = completos(ms), ult = cheios[cheios.length - 1];
+      var ok = cheios.some(function (m) { return m.chave === ref; });
+      var nHist = ms.length - cheios.length;
+      var nPrio = '—';
+      if (ult) {
+        var iu = ms.indexOf(ult), ant = iu > 0 ? ms[iu - 1] : null;
+        var aa = ms.find(function (m) { return m.chave === chaveAnoAnterior(ult.chave); });
+        var n = montarPlano(d, ult, ant, aa).itens.length;
+        nPrio = '<span class="tag ' + (n ? 'no' : 'ok') + '">' + (n ? n + (n === 1 ? ' alerta' : ' alertas') : '✓ ok') + '</span>';
+      }
+      h += '<tr class="click" data-pad="' + x.idx + '"><td>' + esc(p.nome) + '</td>' +
+        '<td><span class="tag ' + (ok ? 'ok' : 'no') + '">' + (ok ? '✓ enviado' : '! pendente') + '</span></td>' +
+        '<td><span class="tag ' + (nHist ? 'ok' : 'na') + '">' + (nHist ? '✓ ' + nHist + ' meses' : 'não enviado') + '</span></td>' +
+        '<td>' + (ult ? nomeMes(ult.chave) : '—') + '</td><td>' + nPrio + '</td>' +
+        inds.map(function (i) {
+          var v = ult ? ult.ind[i.chave] : null, st = status(i, v, ult);
+          return '<td class="' + (st == null ? '' : st ? 'ok' : 'no') + '">' + (st === false ? '! ' : '') + fmt(v, i.unidade, i.chave) + '</td>';
+        }).join('') + '</tr>';
+    });
+    h += '</tbody></table></div><footer>Toque numa padaria para abrir o painel completo e o plano de ação dela. Este link é só da consultoria: não compartilhe nos grupos.</footer>';
+    app.innerHTML = h;
+    ligar();
+  }
+
+  /* ---------- eventos ---------- */
+  function ligar() {
+    app.querySelectorAll('[data-acao="atualizar"]').forEach(function (b) { b.addEventListener('click', carregar); });
+    app.querySelectorAll('[data-acao="voltar"]').forEach(function (b) {
+      b.addEventListener('click', function () { estado.padariaIdx = null; estado.mesChave = null; render(); window.scrollTo(0, 0); });
+    });
+    app.querySelectorAll('[data-acao="irPlano"]').forEach(function (a) {
+      a.addEventListener('click', function (e) { e.preventDefault(); document.getElementById('plano').scrollIntoView({ behavior: 'smooth' }); });
+    });
+    app.querySelectorAll('[data-pad]').forEach(function (tr) {
+      tr.addEventListener('click', function () { estado.padariaIdx = +tr.getAttribute('data-pad'); estado.mesChave = null; render(); window.scrollTo(0, 0); });
+    });
+    app.querySelectorAll('[data-ind]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        estado.indicador = b.getAttribute('data-ind');
+        var y = window.scrollY;
+        render();
+        if (b.classList.contains('card')) document.getElementById('grafico').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        else window.scrollTo(0, y);
+      });
+    });
+    var sel = document.getElementById('selMes');
+    if (sel) sel.addEventListener('change', function () { estado.mesChave = sel.value; render(); });
+    var selT = document.getElementById('selTurma');
+    if (selT) selT.addEventListener('change', function () { estado.turma = selT.value; render(); });
+  }
+
+  var tResize;
+  window.addEventListener('resize', function () {
+    clearTimeout(tResize);
+    tResize = setTimeout(function () {
+      var d = estado.dados;
+      if (d && document.getElementById('grafico')) grafico(d, d.padarias[estado.padariaIdx].meses);
+    }, 150);
+  });
+
+  /* ---------- dados de demonstração (só quando aberto fora do Apps Script) ---------- */
+  function demo(modo) {
+    var inds = [
+      { chave: 'faturamento', nome: 'Faturamento', unidade: 'R$', direcao: 'maior', referencia: null },
+      { chave: 'clientes', nome: 'Nº de clientes', unidade: 'un', direcao: 'maior', referencia: null },
+      { chave: 'ticket', nome: 'Ticket médio', unidade: 'R$', direcao: 'maior', referencia: null },
+      { chave: 'cmv', nome: 'CMV (% do faturamento)', unidade: '%', direcao: 'menor', referencia: null },
+      { chave: 'margemBruta', nome: 'Margem bruta (% do faturamento)', unidade: '%', direcao: 'maior', referencia: null },
+      { chave: 'prodGeral', nome: 'Produtividade geral (faturamento ÷ pessoas)', unidade: 'R$', direcao: 'maior', referencia: 12000 },
+      { chave: 'prodProducao', nome: 'Produtividade da produção (fat. produção ÷ pessoas da produção)', unidade: 'R$', direcao: 'maior', referencia: 25000 },
+      { chave: 'folhaLB', nome: 'Folha ÷ lucro bruto', unidade: '%', direcao: 'menor', referencia: 30 },
+      { chave: 'perdas', nome: 'Perdas (% sobre as vendas)', unidade: '%', direcao: 'menor', referencia: 10 },
+      { chave: 'rupturas', nome: 'Ruptura de produtos na loja (%)', unidade: '%', direcao: 'menor', referencia: 5 },
+      { chave: 'precoPao', nome: 'Preço do pão francês (R$/kg)', unidade: 'R$', direcao: 'neutra', referencia: null },
+    ];
+    var pesos = { cmvPropria: 32, cmvTerceirizada: 45, cmvRevenda: 66 };
+    function chave(ano, m) { return ano + '-' + (m < 10 ? '0' : '') + m; }
+    function mes(ano, m, x) {
+      var fat = x.fat, cli = Math.round(fat / x.ticket), cmv = fat * x.cmv / 100, lb = fat - cmv;
+      var fp = fat * x.mix[0], ft = fat * x.mix[1], fr = fat * x.mix[2];
+      var ideal = (fp * pesos.cmvPropria + ft * pesos.cmvTerceirizada + fr * pesos.cmvRevenda) / fat;
+      var folha = lb * x.folhaLB / 100;
+      var compras = x.estoque ? cmv * 1.02 : cmv, cmp = fp * 0.33, ct = ft * 0.44, cr = Math.max(0, compras - cmp - ct);
+      var tipos = [
+        { tipo: 'Produção própria', fat: fp, compras: cmp, ideal: pesos.cmvPropria, cmv: cmp / fp * 100 },
+        { tipo: 'Produção terceirizada', fat: ft, compras: ct, ideal: pesos.cmvTerceirizada, cmv: ct / ft * 100 },
+        { tipo: 'Revenda', fat: fr, compras: cr, ideal: pesos.cmvRevenda, cmv: cr / fr * 100 },
+      ];
+      return { chave: chave(ano, m), enviadoEm: '05/' + (m === 12 ? '01' : (m + 1 < 10 ? '0' : '') + (m + 1)) + '/' + (m === 12 ? ano + 1 : ano) + ' 18:20',
+        cmvMetodo: x.estoque ? 'estoque' : 'compras', fatAproximado: !!x.aprox, obs: x.obs || '', refs: { cmv: ideal },
+        comprasSeparadas: true, cmvPorTipo: tipos,
+        bruto: { faturamento: fat, fatProducao: fp, fatTerceirizada: ft, fatRevenda: fr, clientes: cli, compras: compras,
+          comprasMP: cmp, comprasTerc: ct, comprasRev: cr,
+          estoqueInicial: x.estoque ? fat * 0.12 : null, estoqueFinal: x.estoque ? fat * 0.12 + cmv * 0.02 : null, cmv: cmv, cmvIdeal: ideal,
+          lucroBruto: lb, folha: folha, funcionarios: x.func, funcProducao: x.fpess },
+        ind: { faturamento: fat, clientes: cli, ticket: fat / cli, cmv: x.cmv, margemBruta: lb / fat * 100, prodGeral: fat / x.func,
+          prodProducao: fp / x.fpess, folhaLB: x.folhaLB, perdas: x.perdas, rupturas: x.rup, precoPao: x.pao } };
+    }
+    // 2025 = só histórico (faturamento e clientes); 2026 = formulário completo.
+    function gerar(base, semente, fim, semHistorico) {
+      var out = [];
+      for (var i = 0; i < 20; i++) {
+        var ano = i < 12 ? 2025 : 2026, m = (i % 12) + 1, w = Math.sin(i * 1.3 + semente) * 0.04;
+        var fat = base * (1 + w + i * 0.006), ticket = 19 + i * 0.12 + w * 10;
+        if (ano === 2025) {
+          if (!semHistorico) out.push({ chave: chave(ano, m), historico: true, refs: {}, bruto: { faturamento: fat, clientes: Math.round(fat / ticket) },
+            ind: { faturamento: fat, clientes: Math.round(fat / ticket), ticket: ticket } });
+          continue;
+        }
+        out.push(mes(ano, m, { fat: fat, ticket: ticket, cmv: 42 - (i - 12) * 0.2 + w * 15, folhaLB: 31 - (i - 12) * 0.3, func: 15, fpess: 6,
+          perdas: 8 - (i - 12) * 0.3, rup: 5.5 - (i - 12) * 0.3, estoque: i % 3 === 0, mix: [0.65, 0.05, 0.30], pao: 17.9 + (i > 15 ? 1 : 0), aprox: i === 12 }));
+      }
+      if (fim) out[out.length - 1] = mes(2026, 8, fim);
+      return out;
+    }
+    var pads = [
+      { codigo: 'UDI01', nome: 'Padaria Pão Dourado (demonstração)', turma: 'Uberlândia', linkForm: '#', linkHistorico: '#',
+        meses: gerar(185000, 1, { fat: 181000, ticket: 20.1, cmv: 45.3, folhaLB: 31.5, func: 15, fpess: 6, perdas: 5.4, rup: 7.8,
+          mix: [0.64, 0.06, 0.30], pao: 18.9, obs: 'Mês com feriado prolongado.' }) },
+      { codigo: 'UDI02', nome: 'Padaria Trigo Bom (demonstração)', turma: 'Uberlândia', linkForm: '#', meses: gerar(132000, 2, null, true).slice(0, 7) },
+      { codigo: 'UDI03', nome: 'Panificadora Central (demonstração)', turma: 'Uberlândia', linkForm: '#', meses: gerar(240000, 3) },
+      { codigo: 'JF01', nome: 'Padaria Serra (demonstração)', turma: 'Juiz de Fora', linkForm: '#', meses: gerar(150000, 4, null, true).slice(3) },
+    ];
+    return { modo: modo, geradoEm: '28/09/2026 às 10:00', mesReferencia: '2026-08', indicadores: inds, pesosCmv: pesos,
+      padarias: modo === 'admin' ? pads : [pads[0]] };
+  }
+
+  carregar();
+})();
+</script>
+</body>
+</html>
